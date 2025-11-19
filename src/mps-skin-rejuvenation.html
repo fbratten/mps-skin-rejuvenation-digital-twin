@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MPS Skin Rejuvenation Lab</title>
+<meta name="description" content="Microphysiological skin+BM co-culture simulator with complete AI optimization suite: RL, Bayesian Optimization, Thompson Sampling, DNAm clock, XAI, and Louvain clustering with phase-2 aggregation." />
+<style>
+  :root{
+    --bg:#0e0f16; --panel:#121423; --ink:#e9ecff; --muted:#aab2d6;
+    --brand1:#6875f5; --brand2:#7b5fc4; --ok:#2fbf71; --warn:#ffb020; --bad:#ef5a5a;
+    --edge:rgba(255,255,255,.08); --rl:#4fd1c5; --bo:#f6ad55; --ts:#fc8181;
+  }
+  [data-theme="light"]{ --bg:#f3f5ff; --panel:#ffffff; --ink:#121423; --muted:#4a5272; --edge:#e7e9fb }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(123,95,196,.25), transparent 60%),
+    radial-gradient(800px 400px at 110% 10%, rgba(104,117,245,.25), transparent 60%), var(--bg); color:var(--ink)}
+  .container{max-width:1400px;margin:24px auto;padding:16px}
+  .shell{background:var(--panel);border:1px solid var(--edge);border-radius:16px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+  header{padding:24px 20px;background:linear-gradient(135deg,var(--brand1),var(--brand2));color:white}
+  header h1{margin:0 0 6px;font-size:1.8rem;font-weight:800}
+  header p{margin:0;opacity:.9}
+  .topbar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-top:10px}
+  .btn{appearance:none;border:1px solid var(--edge);background:var(--panel);color:var(--ink);padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:600}
+  .btn:hover{border-color:transparent;box-shadow:0 0 0 3px rgba(104,117,245,.25)}
+  .btn.primary{background:linear-gradient(135deg,var(--brand1),var(--brand2));color:white;border:none}
+  .tabs{display:flex;flex-wrap:wrap;gap:4px;padding:8px;background:linear-gradient(180deg,rgba(255,255,255,.02),transparent)}
+  .tab{padding:10px 12px;border-radius:10px;border:1px solid var(--edge);cursor:pointer;background:var(--panel);color:var(--muted);font-weight:600}
+  .tab[aria-selected="true"]{color:white;background:linear-gradient(135deg,var(--brand1),var(--brand2));border:none}
+  .content{padding:18px}
+  .grid{display:grid;gap:16px}
+  @media(min-width:900px){.grid.cols-2{grid-template-columns:1fr 1fr}.grid.cols-3{grid-template-columns:1.2fr 1fr 1fr}}
+  .card{background:var(--panel);border:1px solid var(--edge);border-radius:12px;padding:16px}
+  .card h3{margin:0 0 12px;color:var(--brand1)}
+  label{display:block;font-weight:700;margin:10px 0 6px}
+  select,input[type="range"],input[type="number"]{width:100%}
+  .metric{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dashed var(--edge)}
+  .metric:last-child{border-bottom:none}
+  .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid var(--edge);background:rgba(255,255,255,.02)}
+  .ok{color:var(--ok)} .bad{color:var(--bad)} .muted{color:var(--muted)}
+  canvas{width:100%;height:300px;background:transparent;border:1px dashed var(--edge);border-radius:12px}
+  table{width:100%;border-collapse:collapse;border:1px solid var(--edge);border-radius:12px;overflow:hidden}
+  thead th{background:linear-gradient(135deg,var(--brand1),var(--brand2));color:white;text-align:left;padding:10px}
+  tbody td{border-bottom:1px solid var(--edge);padding:8px}
+  tr:hover td{background:rgba(104,117,245,.06)}
+  .protein{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+  .protein button{padding:10px;border-radius:10px;border:1px solid var(--edge);cursor:pointer;background:rgba(104,117,245,.08)}
+  .protein button.active{background:linear-gradient(135deg,var(--brand1),var(--brand2));color:white;border:none}
+  .net{width:100%;height:420px;border:1px dashed var(--edge);border-radius:12px}
+  details.papers{border:1px solid var(--edge);border-radius:10px;padding:10px;background:rgba(255,255,255,.03)}
+  .gp-controls{background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:12px;margin:10px 0}
+  .gp-controls label{display:inline-block;margin-right:20px}
+  .legend{display:flex;gap:15px;margin:10px 0;font-size:13px}
+  .legend-item{display:flex;align-items:center;gap:5px}
+  .legend-swatch{width:12px;height:12px;border-radius:3px}
+  .phase-viz{margin-top:20px;padding:15px;background:rgba(104,117,245,.05);border-radius:10px}
+</style>
+</head>
+<body data-theme="dark">
+<div class="container">
+  <div class="shell" role="application" aria-label="MPS Skin Rejuvenation Lab">
+    <header>
+      <h1>🧬 MPS Skin Rejuvenation Lab — Complete Suite</h1>
+      <p>Skin + BM co-culture simulator with <strong>complete optimization suite</strong>: RL, Bayesian Optimization, Thompson Sampling, Louvain clustering with phase-2 aggregation, DNAm clock, and XAI.</p>
+      <div class="topbar">
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn" id="themeBtn" aria-pressed="true" title="Toggle theme">🌙 Theme</button>
+          <button class="btn" id="factsBtn" title="Show paper facts">📚 Paper facts</button>
+        </div>
+        <div class="pill" title="Co-culture required for rejuvenation per paper">System mode: <strong id="modeBadge">Skin + BM</strong></div>
+      </div>
+    </header>
+    
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button class="tab" role="tab" aria-selected="true" aria-controls="exp" id="tab-exp">🧪 Experiment Lab</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="opt" id="tab-opt">🎯 Optimization Suite</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="prot" id="tab-prot">🔬 Proteins</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="ai" id="tab-ai">🤖 AI Models</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="methyl" id="tab-methyl">🧬 Methylation</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="net" id="tab-net">🕸️ Network</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="data" id="tab-data">📊 Data</button>
+    </nav>
+
+    <section class="content">
+      <!-- PAPER FACTS -->
+      <details class="papers" id="facts" open>
+        <summary><strong>Paper-grounded logic & AI features alignment</strong></summary>
+        <ul style="margin:8px 0 0 18px; line-height:1.55">
+          <li><em>Rejuvenation emerges with <strong>young serum + BM co-culture</strong>, not skin-only.</em> Effects: Ki67↑, DNAm age↓, mito potential↑.</li>
+          <li>Verified rejuvenating proteins: CHI3L1, CST7, IL1RN, CD55, SPINT1, MMP9, FCAR (GDF11 as benchmark).</li>
+          <li>Secretome network hubs: MMP9, CD163, APOB, CRP, SERPINE1.</li>
+          <li><strong>Complete AI optimization suite</strong>: RL (ε-greedy), Bayesian Optimization (GP+EI), Thompson Sampling (Beta-Bernoulli), with trace plotting and GP hyperparameter control.</li>
+          <li>Advanced features: Louvain clustering with phase-2 aggregation visualization, XAI (permutation importance), AutoML-lite (k-fold CV).</li>
+        </ul>
+      </details>
+
+      <!-- Experiment Tab -->
+      <div id="exp" role="tabpanel" aria-labelledby="tab-exp">
+        <div class="grid cols-2">
+          <div class="card">
+            <h3>🧫 Organ-on-Chip Configuration</h3>
+            <label for="serumAge">Serum age source</label>
+            <select id="serumAge">
+              <option value="young">Young (&lt;30y)</option>
+              <option value="old">Old (&gt;60y)</option>
+              <option value="mixed">Mixed</option>
+            </select>
+            <label for="serumConc">Serum concentration: <span id="serumConcLbl">10</span>%</label>
+            <input id="serumConc" type="range" min="0" max="20" step="1" value="10" aria-describedby="serumConcLbl" />
+            <label for="bmModel">Include Bone Marrow model</label>
+            <select id="bmModel"><option value="yes">Yes (co-culture)</option><option value="no">No (skin only)</option></select>
+            <label for="days">Culture duration (days): <span id="daysLbl">21</span></label>
+            <input id="days" type="range" min="7" max="35" step="1" value="21" aria-describedby="daysLbl" />
+            <label for="flow">Flow (mbar): <span id="flowLbl">500</span></label>
+            <input id="flow" type="range" min="100" max="1000" step="50" value="500" aria-describedby="flowLbl" />
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+              <button class="btn primary" id="runBtn">▶️ Run experiment</button>
+              <button class="btn" id="quickOptBtn" title="Quick comparison of all optimizers">⚡ Quick optimize all</button>
+            </div>
+            <p class="muted" style="margin-top:8px">Tip: Set <strong>Young + BM</strong> for strongest rejuvenation effects.</p>
+          </div>
+          <div class="card">
+            <h3>📈 Results</h3>
+            <div id="results" class="muted">Configure and run an experiment…</div>
+            <div aria-live="polite" id="progress" style="margin-top:10px"></div>
+            <div class="metric"><span>Rejuvenation score</span><span id="score" class="pill">—</span></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:12px">
+          <canvas id="chart" aria-label="Aging biomarkers chart" role="img"></canvas>
+        </div>
+      </div>
+
+      <!-- Optimization Suite Tab -->
+      <div id="opt" hidden role="tabpanel" aria-labelledby="tab-opt">
+        <div class="gp-controls">
+          <strong>Gaussian Process Hyperparameters</strong>
+          <div style="margin-top:8px">
+            <label>Lengthscale ℓ: <span id="lVal">2.5</span>
+              <input id="lengthscale" type="range" min="0.5" max="5" step="0.1" value="2.5" style="width:150px">
+            </label>
+            <label>Variance σ²: <span id="vVal">1.0</span>
+              <input id="variance" type="range" min="0.1" max="3" step="0.1" value="1.0" style="width:150px">
+            </label>
+          </div>
+          <p class="muted" style="margin-top:8px;font-size:13px">K(x,x′) = σ² · exp(-(x-x′)² / (2ℓ²))</p>
+        </div>
+        
+        <div class="grid cols-2">
+          <div class="card">
+            <h3>🎯 Optimization Methods</h3>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn" id="rlBtn" title="ε-greedy multi-armed bandit">🧠 RL optimize</button>
+              <button class="btn" id="boBtn" title="Gaussian Process + Expected Improvement">📈 BO optimize</button>
+              <button class="btn" id="tsBtn" title="Thompson Sampling (Beta-Bernoulli)">🎲 TS optimize</button>
+              <button class="btn primary" id="compareBtn">📊 Compare all</button>
+            </div>
+            
+            <div class="legend">
+              <div class="legend-item"><div class="legend-swatch" style="background:var(--rl)"></div>RL</div>
+              <div class="legend-item"><div class="legend-swatch" style="background:var(--bo)"></div>BO</div>
+              <div class="legend-item"><div class="legend-swatch" style="background:var(--ts)"></div>TS</div>
+            </div>
+            
+            <div id="optResults" class="metric" style="margin-top:10px">
+              <span>Best results</span>
+              <span id="optSummary" class="muted">Run optimizers to see comparison</span>
+            </div>
+          </div>
+          
+          <div class="card">
+            <h3>📉 Optimization Traces</h3>
+            <canvas id="traceChart" width="600" height="250"></canvas>
+            <div id="convergenceStats" class="muted" style="margin-top:10px;font-size:13px">
+              Convergence metrics will appear here
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Proteins Tab -->
+      <div id="prot" hidden role="tabpanel" aria-labelledby="tab-prot">
+        <div class="grid cols-2">
+          <div class="card">
+            <h3>🔬 Rejuvenating proteins</h3>
+            <p class="muted">Click to apply a factor (72h pulse). Effects mirror hallmarks from the paper.</p>
+            <div id="proteinGrid" class="protein"></div>
+          </div>
+          <div class="card">
+            <h3>🧪 Protein effects</h3>
+            <div id="protOut" class="muted">Select a protein…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Models Tab -->
+      <div id="ai" hidden role="tabpanel" aria-labelledby="tab-ai">
+        <div class="grid cols-3">
+          <div class="card">
+            <h3>🧠 Mini DNAm clock (synthetic)</h3>
+            <p class="muted">Train a tiny linear model on synthetic CpG features. Shows permutation importance (XAI).</p>
+            <label>Synthetic samples</label>
+            <input id="nSamples" type="number" min="60" max="2000" value="200" />
+            <label>Features (CpGs)</label>
+            <input id="nFeat" type="number" min="5" max="200" value="50" />
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button class="btn" id="trainClock">Train</button>
+              <button class="btn" id="permute">Permutation importance</button>
+            </div>
+            <div id="clockOut" style="margin-top:10px" class="muted">—</div>
+          </div>
+          <div class="card">
+            <h3>🧪 AutoML-lite</h3>
+            <p class="muted">k-fold CV on OLS vs Ridge vs Lasso over the synthetic set.</p>
+            <label>k folds</label>
+            <input id="kfold" type="number" min="3" max="10" value="5" />
+            <button class="btn" id="cvBtn" style="margin-top:8px">Run CV</button>
+            <div id="cvOut" class="muted" style="margin-top:10px">—</div>
+          </div>
+          <div class="card">
+            <h3>🔮 Predict biological age</h3>
+            <label>Chronological age (years)</label>
+            <input id="ageIn" type="range" min="20" max="80" value="45" oninput="document.getElementById('ageLbl').textContent=this.value" />
+            <div class="metric"><span>Age</span><span id="ageLbl">45</span></div>
+            <button class="btn primary" id="predictBtn">Predict</button>
+            <div id="predOut" class="muted" style="margin-top:10px">Train a clock first.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Methylation Tab -->
+      <div id="methyl" hidden role="tabpanel" aria-labelledby="tab-methyl">
+        <div class="grid cols-2">
+          <div class="card">
+            <h3>🧬 DNA methylation simulator</h3>
+            <label for="cpg">CpG sites: <span id="cpgLbl">500</span></label>
+            <input id="cpg" type="range" min="100" max="1000" step="50" value="500" aria-describedby="cpgLbl" />
+            <label for="tissue">Tissue</label>
+            <select id="tissue"><option value="skin">Skin</option><option>Blood</option><option>Muscle</option><option>Brain</option></select>
+            <button class="btn" id="runMeth" style="margin-top:8px">Run analysis</button>
+            <div id="methOut" class="muted" style="margin-top:10px">—</div>
+          </div>
+          <div class="card"><canvas id="methChart" aria-label="Methylation pattern"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Network Tab with Phase-2 Aggregation -->
+      <div id="net" hidden role="tabpanel" aria-labelledby="tab-net">
+        <div class="card">
+          <h3>🕸️ Protein interaction network</h3>
+          <p class="muted">Louvain clustering with phase-2 aggregation visualization. Network seeded with secretome hubs from the paper.</p>
+          
+          <canvas id="netCanvas" width="800" height="400" style="width:100%;height:400px"></canvas>
+          
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+            <button class="btn" id="clusterBtn" title="Run Louvain with phase-2 aggregation">🔍 Run Louvain clustering</button>
+            <button class="btn" id="regenBtn" title="Regenerate network layout">↻ Regenerate network</button>
+          </div>
+          
+          <div class="phase-viz">
+            <div class="metric"><span>Modularity Q</span><span id="QOut" class="pill">—</span></div>
+            <div class="metric"><span>Clusters</span><span id="clusterOut" class="pill">—</span></div>
+            <div class="metric"><span>Phase 1 communities</span><span id="phase1Out" class="pill">—</span></div>
+            <div style="margin-top:12px">
+              <canvas id="aggCanvas" aria-label="Louvain phase-2 aggregation preview"></canvas>
+            </div>
+            <div class="metric"><span>Phase 2 super-nodes</span><span id="phase2Out" class="pill">—</span></div>
+            <div id="clusterDetails" style="margin-top:10px" class="muted">Run clustering to see community details</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Tab -->
+      <div id="data" hidden role="tabpanel" aria-labelledby="tab-data">
+        <div class="grid cols-2">
+          <div class="card">
+            <h3>📋 Dataset</h3>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn" id="genBtn">Generate 10 runs</button>
+              <button class="btn" id="exportBtn">Export JSON</button>
+              <input type="file" id="importFile" accept="application/json" style="display:none" />
+              <button class="btn" id="importBtn">Import JSON</button>
+              <button class="btn" id="csvBtn">Export CSV</button>
+            </div>
+            <table style="margin-top:10px">
+              <thead><tr>
+                <th>ExpID</th><th>Serum</th><th>BM</th><th>Ki67%</th><th>BioAge</th><th>Procollagen%</th><th>Status</th>
+              </tr></thead>
+              <tbody id="rows"></tbody>
+            </table>
+          </div>
+          <div class="card">
+            <h3>📈 Stats</h3>
+            <div id="stats" class="muted">Generate data to see analysis…</div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </div>
+</div>
+
+<script>
+/* ====== State & Helpers ====== */
+let DATA = [];
+let MODEL = {trained:false, W:null, mu:null, sigma:null, featNames:[]};
+let RLTrace = [], BOTrace = [], TSTrace = [];
+let bestRL = null, bestBO = null, bestTS = null;
+let NET = {nodes:[], edges:[], communities:null, aggregated:null};
+
+const $ = s => document.querySelector(s);
+const el = (t,props={})=>Object.assign(document.createElement(t),props);
+const fmt = n => typeof n==='number'? (Math.abs(n)>100? n.toFixed(0): n.toFixed(2)) : n;
+const randn = () => { let u=0,v=0; while(!u) u=Math.random(); while(!v) v=Math.random(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); };
+
+/* ====== Tabs ====== */
+['exp','opt','prot','ai','methyl','net','data'].forEach(id=>{
+  const btn = $('#tab-'+id), panel = $('#'+id);
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected','false'));
+    btn.setAttribute('aria-selected','true');
+    document.querySelectorAll('[role="tabpanel"]').forEach(p=>p.hidden=true);
+    panel.hidden=false;
+  });
+});
+
+/* ====== Theme & Facts ====== */
+$('#themeBtn').onclick = ()=>{
+  const cur = document.body.getAttribute('data-theme');
+  document.body.setAttribute('data-theme', cur==='dark'?'light':'dark');
+};
+$('#factsBtn').onclick = ()=> $('#facts').open = !$('#facts').open;
+
+/* ====== Link range labels ====== */
+[['serumConc','serumConcLbl'],['days','daysLbl'],['flow','flowLbl'],['cpg','cpgLbl'],['lengthscale','lVal'],['variance','vVal']].forEach(([i,l])=>{
+  const I=$('#'+i), L=$('#'+l); 
+  if(I && L) {
+    const sync=()=> L.textContent=I.value; 
+    I.addEventListener('input',sync); 
+    sync();
+  }
+});
+
+/* ====== Experiment model (paper-grounded) ====== */
+function runExperimentOnce(conf){
+  const base = {Ki67:25, BioAge:45, ProCol:100, HA:100, Mito:100};
+  let d={Ki67:0,BioAge:0,ProCol:0,HA:0,Mito:0};
+  const young = conf.serumAge==='young', old=conf.serumAge==='old', withBM=conf.bmModel==='yes';
+  
+  if(young && withBM){
+    // Paper: strong rejuvenation only with young serum + BM
+    d.Ki67 = 15 + Math.random()*10 + conf.serumConc*0.5;
+    d.BioAge = 5 + Math.random()*5 + conf.days/7;
+    d.ProCol = 20 + Math.random()*15 + conf.flow/50;
+    d.HA = 8 + Math.random()*6; 
+    d.Mito = 6 + Math.random()*6;
+  } else if(young && !withBM){
+    // Minimal effect without BM
+    d.Ki67 = Math.random()*2; 
+    d.BioAge = Math.random()*1; 
+    d.ProCol = 2 + Math.random()*3; 
+    d.HA = 1 + Math.random()*2; 
+    d.Mito = 1 + Math.random()*2;
+  } else if(old){
+    // Negative effects with old serum
+    d.Ki67 = -(2 + Math.random()*3); 
+    d.BioAge = -(1 + Math.random()*2); 
+    d.ProCol = -(5 + Math.random()*5); 
+    d.HA = -(2 + Math.random()*3); 
+    d.Mito = -(2 + Math.random()*3);
+  } else {
+    // Mixed: small positive effects
+    d.Ki67 = Math.random()*3; 
+    d.BioAge = Math.random()*1.5; 
+    d.ProCol = Math.random()*4; 
+    d.HA = Math.random()*2; 
+    d.Mito = Math.random()*2;
+  }
+  
+  const res = {
+    id:'EXP-'+Date.now()+'-'+Math.floor(Math.random()*1e3), 
+    serum:conf.serumAge, 
+    bm:conf.bmModel,
+    Ki67: base.Ki67 + d.Ki67, 
+    BioAge: base.BioAge - d.BioAge, 
+    ProCol: base.ProCol + d.ProCol,
+    HA: base.HA + d.HA, 
+    Mito: base.Mito + d.Mito, 
+    status:'Complete'
+  };
+  return res;
+}
+
+function calculateScore(r){
+  return (r.Ki67-25) + (45-r.BioAge)*1.5 + (r.ProCol-100)*0.5 + (r.HA-100)*0.4 + (r.Mito-100)*0.4;
+}
+
+function renderResults(r){
+  $('#results').innerHTML = `
+    <div class="metric"><span>ExpID</span><span class="pill">${r.id}</span></div>
+    <div class="metric"><span>Ki67+ cells</span><span><strong>${fmt(r.Ki67)}%</strong> ${r.Ki67>=25?'↑':'↓'}</span></div>
+    <div class="metric"><span>Biological age</span><span><strong>${fmt(r.BioAge)}</strong> yrs ${r.BioAge<45?'<span class="ok">↓</span>':'<span class="bad">↑</span>'}</span></div>
+    <div class="metric"><span>Procollagen</span><span><strong>${fmt(r.ProCol)}%</strong> ${r.ProCol>=100?'↑':'↓'}</span></div>
+    <div class="metric"><span>Hyaluronic acid</span><span><strong>${fmt(r.HA)}%</strong></span></div>
+    <div class="metric"><span>Mitochondrial potential</span><span><strong>${fmt(r.Mito)}%</strong></span></div>`;
+  const score = calculateScore(r);
+  $('#score').textContent = fmt(score);
+  drawBars(r);
+  return score;
+}
+
+let currentPlot=null;
+function drawBars(r){
+  const c=$('#chart'), ctx=c.getContext('2d'); 
+  const W=c.clientWidth, H=300; 
+  c.width=W; c.height=H;
+  ctx.clearRect(0,0,W,H);
+  
+  const labels=['Ki67','BioAge↓','ProColl','HA','Mito'];
+  const vals=[r.Ki67, 100-r.BioAge, r.ProCol, r.HA, r.Mito];
+  const maxV=Math.max(...vals, 100); 
+  const w=(W-60)/labels.length;
+  
+  labels.forEach((lb,i)=>{
+    const x=30+i*w; 
+    const h=(vals[i]/maxV)*(H-70); 
+    const y=H-30-h;
+    const g=ctx.createLinearGradient(0,y,0,H); 
+    g.addColorStop(0,'#6875f5'); 
+    g.addColorStop(1,'#7b5fc4');
+    ctx.fillStyle=g; 
+    ctx.fillRect(x+10,y,w-20,h);
+    ctx.fillStyle='#aab2d6'; 
+    ctx.textAlign='center'; 
+    ctx.fillText(lb,x+w/2,H-10);
+    ctx.fillStyle='#e9ecff'; 
+    ctx.font='bold 12px system-ui'; 
+    ctx.fillText(fmt(vals[i]), x+w/2, y-6);
+  });
+  currentPlot=()=>drawBars(r);
+}
+
+addEventListener('resize',()=>{ 
+  if(currentPlot) {
+    clearTimeout(window.__redrawT); 
+    window.__redrawT=setTimeout(currentPlot,120); 
+  }
+});
+
+/* ====== Run experiment ====== */
+$('#runBtn').onclick = ()=>{
+  const conf={
+    serumAge:$('#serumAge').value,
+    serumConc:+$('#serumConc').value,
+    bmModel:$('#bmModel').value,
+    days:+$('#days').value,
+    flow:+$('#flow').value
+  };
+  $('#modeBadge').textContent = conf.bmModel==='yes'? 'Skin + BM':'Skin only';
+  $('#progress').textContent='Running…'; 
+  
+  let p=0; 
+  const t=setInterval(()=>{ 
+    p+=7; 
+    $('#progress').textContent = `Progress ${Math.min(p,100)}%`; 
+    if(p>=100){
+      clearInterval(t);
+      const r=runExperimentOnce(conf); 
+      DATA.push({
+        id:r.id,
+        serumType:conf.serumAge==='young'?'Young':conf.serumAge==='old'?'Old':'Mixed',
+        bmModel:(conf.bmModel==='yes'?'Yes':'No'),
+        ki67:r.Ki67,
+        biologicalAge:r.BioAge,
+        procollagen:r.ProCol,
+        status:'Complete'
+      });
+      renderResults(r); 
+      renderTable(); 
+      renderStats();
+    }
+  },80);
+};
+
+/* ====== Gaussian elimination solver ====== */
+function solve(A,b){
+  const n=A.length; 
+  const M=A.map((r,i)=>[...r,b[i]]);
+  for(let i=0;i<n;i++){
+    let p=i; 
+    for(let r=i;r<n;r++) if(Math.abs(M[r][i])>Math.abs(M[p][i])) p=r; 
+    [M[i],M[p]]=[M[p],M[i]];
+    const div=M[i][i]||1e-9; 
+    for(let j=i;j<=n;j++) M[i][j]/=div;
+    for(let r=0;r<n;r++){ 
+      if(r===i) continue; 
+      const f=M[r][i]; 
+      for(let j=i;j<=n;j++) M[r][j]-=f*M[i][j]; 
+    }
+  }
+  return M.map(r=>r[n]);
+}
+
+/* ====== RL: epsilon-greedy optimizer ====== */
+$('#rlBtn').onclick = ()=>{
+  const withBM=$('#bmModel').value==='yes'; 
+  const age=$('#serumAge').value;
+  let best={conc:10,score:-1e9}; 
+  let Q=Array(21).fill(0), N=Array(21).fill(0); 
+  const eps0=0.3, rounds=40; 
+  RLTrace=[];
+  
+  for(let t=1;t<=rounds;t++){
+    const eps = eps0*Math.max(0.05,1-t/rounds); 
+    let a;
+    if(Math.random()<eps) a=Math.floor(Math.random()*21); 
+    else a = Q.indexOf(Math.max(...Q));
+    
+    const conf={serumAge:age,serumConc:a,bmModel:withBM?'yes':'no',days:+$('#days').value,flow:+$('#flow').value};
+    const res=runExperimentOnce(conf); 
+    const score=calculateScore(res);
+    
+    N[a]++; 
+    Q[a]+= (score - Q[a]) / N[a]; 
+    if(score>best.score) best={conc:a,score}; 
+    RLTrace.push(score);
+  }
+  
+  bestRL = best;
+  updateOptSummary();
+  drawOptTraces();
+};
+
+/* ====== BO: Gaussian Process + Expected Improvement ====== */
+function rbf(a,b,l,sf){ 
+  return sf*Math.exp(-Math.pow(a-b,2)/(2*l*l)); 
+}
+function normPdf(z){ 
+  return Math.exp(-0.5*z*z)/Math.sqrt(2*Math.PI); 
+}
+function normCdf(z){
+  const t=1/(1+0.2316419*Math.abs(z)); 
+  const d=0.3989423*Math.exp(-z*z/2);
+  let p=d*t*(0.3193815 + t*(-0.3565638 + t*(1.781478 + t*(-1.821256 + t*1.330274))));
+  return z>0? 1-p : p;
+}
+
+$('#boBtn').onclick = ()=>{
+  const withBM=$('#bmModel').value==='yes'; 
+  const age=$('#serumAge').value; 
+  const days=+$('#days').value; 
+  const flow=+$('#flow').value;
+  const l = parseFloat($('#lengthscale').value);
+  const sf = parseFloat($('#variance').value);
+  
+  const domain=[...Array(21).keys()];
+  let xs=[2, 18], ys=[]; 
+  BOTrace=[];
+  
+  xs.forEach(a=>{ 
+    const r=runExperimentOnce({serumAge:age,serumConc:a,bmModel:withBM?'yes':'no',days,flow}); 
+    const score = calculateScore(r);
+    ys.push(score); 
+    BOTrace.push(score); 
+  });
+  
+  const iters=18, noise=1e-6; 
+  let best={x:xs[0], y:ys[0]}; 
+  if(ys[1]>best.y) best={x:xs[1],y:ys[1]};
+  
+  for(let t=0;t<iters;t++){
+    const n=xs.length; 
+    const K=Array(n).fill(0).map(()=>Array(n).fill(0));
+    for(let i=0;i<n;i++) for(let j=0;j<n;j++) K[i][j]=rbf(xs[i],xs[j],l,sf) + (i===j?noise:0);
+    const alpha=solve(K, ys);
+    
+    let bestEI=-1, bestX=0;
+    for(const x of domain){ 
+      if(xs.includes(x)) continue; 
+      const kstar=xs.map(xi=>rbf(x,xi,l,sf));
+      const mu = kstar.reduce((s,v,i)=> s+v*alpha[i], 0);
+      const v = solve(K, kstar);
+      const kxx = rbf(x,x,l,sf);
+      let varx = kxx - kstar.reduce((s,kv,i)=> s + kv*v[i], 0); 
+      if(varx<1e-9) varx=1e-9;
+      const sigma=Math.sqrt(varx);
+      const xi=0.01; 
+      const imp = mu - best.y - xi; 
+      const Z = imp / sigma;
+      const EI = imp * normCdf(Z) + sigma * normPdf(Z);
+      if(EI>bestEI){ bestEI=EI; bestX=x; }
+    }
+    
+    const r=runExperimentOnce({serumAge:age, serumConc:bestX, bmModel:withBM?'yes':'no', days, flow});
+    const y=calculateScore(r); 
+    xs.push(bestX); 
+    ys.push(y); 
+    BOTrace.push(y); 
+    if(y>best.y) best={x:bestX, y};
+  }
+  
+  bestBO = {conc:best.x, score:best.y};
+  updateOptSummary();
+  drawOptTraces();
+};
+
+/* ====== Thompson Sampling ====== */
+function betaSample(a,b) {
+  // Kumaraswamy approximation for Beta
+  const u = Math.random();
+  return Math.pow(u, 1/a) / (Math.pow(u, 1/a) + Math.pow(1-u, 1/b));
+}
+
+$('#tsBtn').onclick = ()=>{
+  const withBM = $('#bmModel').value === 'yes';
+  const age = $('#serumAge').value;
+  const days = +$('#days').value;
+  const flow = +$('#flow').value;
+  
+  // Beta distributions for each arm
+  const alpha = Array(21).fill(1); // successes + 1
+  const beta = Array(21).fill(1);  // failures + 1
+  
+  let best = {conc: 10, score: -1e9};
+  TSTrace = [];
+  
+  for(let round = 0; round < 40; round++) {
+    // Sample from each arm's Beta distribution
+    const samples = alpha.map((a, i) => betaSample(a, beta[i]));
+    
+    // Select arm with highest sample
+    const selected = samples.indexOf(Math.max(...samples));
+    
+    // Run experiment
+    const conf = {
+      serumAge: age,
+      serumConc: selected,
+      bmModel: withBM ? 'yes' : 'no',
+      days: days,
+      flow: flow
+    };
+    
+    const res = runExperimentOnce(conf);
+    const score = calculateScore(res);
+    TSTrace.push(score);
+    
+    // Update Beta parameters based on "success" threshold
+    if(score > 30) alpha[selected]++;  // Success threshold
+    else beta[selected]++;
+    
+    if(score > best.score) best = {conc: selected, score};
+  }
+  
+  bestTS = best;
+  updateOptSummary();
+  drawOptTraces();
+};
+
+/* ====== Compare all optimizers ====== */
+$('#compareBtn').onclick = () => {
+  $('#rlBtn').click();
+  setTimeout(() => $('#boBtn').click(), 100);
+  setTimeout(() => $('#tsBtn').click(), 200);
+};
+
+$('#quickOptBtn').onclick = () => {
+  $('#tab-opt').click();
+  setTimeout(() => $('#compareBtn').click(), 100);
+};
+
+/* ====== Draw optimization traces ====== */
+function drawOptTraces() {
+  const c = $('#traceChart');
+  const ctx = c.getContext('2d');
+  const W = c.width;
+  const H = c.height;
+  ctx.clearRect(0,0,W,H);
+  
+  // Draw axes
+  ctx.strokeStyle = '#2a2d4a';
+  ctx.beginPath();
+  ctx.moveTo(40,10); 
+  ctx.lineTo(40,H-30); 
+  ctx.lineTo(W-10,H-30);
+  ctx.stroke();
+  
+  // Draw traces
+  function drawTrace(data, color) {
+    if(!data || data.length === 0) return;
+    
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    
+    const maxY = Math.max(100, ...data.flat());
+    const minY = Math.min(0, ...data.flat());
+    const spanY = maxY - minY || 1;
+    
+    data.forEach((v,i) => {
+      const x = 40 + (W-60) * (i/(data.length-1 || 1));
+      const y = (H-30) - (H-50) * ((v-minY)/spanY);
+      if(i===0) ctx.moveTo(x,y); 
+      else ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+  }
+  
+  drawTrace(RLTrace, '#4fd1c5');
+  drawTrace(BOTrace, '#f6ad55');
+  drawTrace(TSTrace, '#fc8181');
+  
+  // Labels
+  ctx.fillStyle = '#aab2d6';
+  ctx.font = '12px system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText('Iterations', W/2, H-10);
+  
+  ctx.save();
+  ctx.translate(15, H/2);
+  ctx.rotate(-Math.PI/2);
+  ctx.fillText('Rejuvenation Score', 0, 0);
+  ctx.restore();
+  
+  // Update convergence stats
+  updateConvergenceStats();
+}
+
+function updateOptSummary() {
+  const parts = [];
+  if(bestRL) parts.push(`RL: ${bestRL.conc}% (${fmt(bestRL.score)})`);
+  if(bestBO) parts.push(`BO: ${bestBO.conc}% (${fmt(bestBO.score)})`);
+  if(bestTS) parts.push(`TS: ${bestTS.conc}% (${fmt(bestTS.score)})`);
+  
+  $('#optSummary').textContent = parts.length ? parts.join(' | ') : 'Run optimizers';
+}
+
+function updateConvergenceStats() {
+  const stats = [];
+  
+  if(RLTrace.length > 0) {
+    const rlFinal = RLTrace[RLTrace.length-1];
+    const rlMax = Math.max(...RLTrace);
+    stats.push(`RL: final=${fmt(rlFinal)}, max=${fmt(rlMax)}`);
+  }
+  
+  if(BOTrace.length > 0) {
+    const boFinal = BOTrace[BOTrace.length-1];
+    const boMax = Math.max(...BOTrace);
+    stats.push(`BO: final=${fmt(boFinal)}, max=${fmt(boMax)}`);
+  }
+  
+  if(TSTrace.length > 0) {
+    const tsFinal = TSTrace[TSTrace.length-1];
+    const tsMax = Math.max(...TSTrace);
+    stats.push(`TS: final=${fmt(tsFinal)}, max=${fmt(tsMax)}`);
+  }
+  
+  $('#convergenceStats').textContent = stats.length ? 
+    'Convergence: ' + stats.join(' | ') : 
+    'Run optimizers to see convergence';
+}
+
+/* ====== Proteins ====== */
+const PROTEINS=[
+  {k:'CHI3L1', name:'CHI3L1', desc:'Chitinase-3-like protein 1', hits:6},
+  {k:'CST7', name:'CST7', desc:'Cystatin-F', hits:4},
+  {k:'IL1RN', name:'IL1RN', desc:'IL-1 receptor antagonist', hits:3},
+  {k:'CD55', name:'CD55', desc:'Complement DAF', hits:5},
+  {k:'SPINT1', name:'SPINT1', desc:'Kunitz-type protease inhibitor 1', hits:4},
+  {k:'MMP9', name:'MMP-9', desc:'Matrix metalloproteinase-9', hits:5},
+  {k:'FCAR', name:'FCAR', desc:'Fc receptor for IgA', hits:3},
+  {k:'GDF11', name:'GDF-11', desc:'Benchmark rejuvenation factor', hits:4}
+];
+
+function simulateProtein(k){
+  const S={Ki67:0,ProCol:0,HA:0,Mito:0,Trans:0}; 
+  const add=(x,v)=>S[x]+=v;
+  switch(k){
+    case 'CHI3L1': add('Ki67',12); add('ProCol',18); add('HA',14); add('Mito',8); add('Trans',15); break;
+    case 'CST7': add('Ki67',8); add('ProCol',10); add('Trans',10); break;
+    case 'IL1RN': add('Ki67',5); add('Mito',7); add('Trans',6); break;
+    case 'CD55': add('Ki67',7); add('ProCol',15); add('HA',12); add('Trans',8); break;
+    case 'SPINT1': add('Ki67',7); add('ProCol',12); add('Trans',9); break;
+    case 'MMP9': add('Ki67',6); add('HA',12); add('Mito',6); add('Trans',7); break;
+    case 'FCAR': add('Ki67',4); add('Trans',6); break;
+    case 'GDF11': add('Ki67',9); add('ProCol',14); add('HA',10); break;
+  }
+  return S;
+}
+
+function renderProteinGrid(){
+  const wrap=$('#proteinGrid'); 
+  wrap.innerHTML='';
+  PROTEINS.forEach(p=>{
+    const b=el('button',{textContent:`${p.name}`}); 
+    b.title=p.desc;
+    b.onclick=()=>{ 
+      document.querySelectorAll('#proteinGrid button').forEach(x=>x.classList.remove('active')); 
+      b.classList.add('active');
+      const e=simulateProtein(p.k);
+      $('#protOut').innerHTML = `
+        <div class="metric"><span><strong>${p.name}</strong> — ${p.desc}</span><span class="pill">${p.hits} hallmarks</span></div>
+        <div class="metric"><span>Proliferation</span><span>${fmt(e.Ki67)}% ${e.Ki67>=0?'↑':'↓'}</span></div>
+        <div class="metric"><span>Procollagen</span><span>${fmt(e.ProCol)}% ${e.ProCol>=0?'↑':'↓'}</span></div>
+        <div class="metric"><span>Hyaluronic acid</span><span>${fmt(e.HA)}% ${e.HA>=0?'↑':'↓'}</span></div>
+        <div class="metric"><span>Mito potential</span><span>${fmt(e.Mito)}% ${e.Mito>=0?'↑':'↓'}</span></div>
+        <div class="metric"><span>Transdifferentiation</span><span>${fmt(e.Trans)}% ↑</span></div>
+        <p class="muted" style="margin-top:6px">Values are scaled deltas aligned to study directions.</p>`;
+    };
+    wrap.appendChild(b);
+  });
+}
+
+/* ====== Mini DNAm clock + XAI ====== */
+function zscore(X){ 
+  const mu=X[0].map((_,j)=>X.reduce((a,r)=>a+r[j],0)/X.length); 
+  const sigma=X[0].map((_,j)=>Math.sqrt(X.reduce((a,r)=>a+Math.pow(r[j]-mu[j],2),0)/X.length)||1); 
+  return {Z:X.map(r=>r.map((v,j)=>(v-mu[j])/sigma[j])), mu, sigma}; 
+}
+
+function linfit(X,y,lambda=0){ 
+  const XT=X[0].map((_,j)=>X.map(r=>r[j])); 
+  const XT_X=XT.map((row,i)=>XT.map((_,j)=>row.reduce((a,v,k)=>a+v*X[k][j],0)+(i===j?lambda:0))); 
+  const XT_y=XT.map(row=>row.reduce((a,v,i)=>a+v*y[i],0)); 
+  return solve(XT_X,XT_y); 
+}
+
+function synthDNAm(n,p){ 
+  const X=[], y=[]; 
+  for(let i=0;i<n;i++){ 
+    const age=20+Math.random()*60; 
+    const row=[]; 
+    for(let j=0;j<p;j++){ 
+      const w=Math.sin((j+1)*0.37)*0.8 + Math.cos((j+3)*0.19)*0.2; 
+      const v=w*(age/80)+(Math.random()*0.2-0.1); 
+      row.push(v);
+    } 
+    X.push(row); 
+    y.push(age+(Math.random()*6-3)); 
+  } 
+  return {X,y}; 
+}
+
+$('#trainClock').onclick=()=>{ 
+  const n=+$('#nSamples').value, p=+$('#nFeat').value; 
+  const {X,y}=synthDNAm(n,p); 
+  const {Z,mu,sigma}=zscore(X); 
+  const w=linfit(Z,y,0); 
+  MODEL={trained:true,W:w,mu,sigma,featNames:Array(p).fill(0).map((_,i)=>'CpG'+(i+1))}; 
+  const rmse=Math.sqrt(y.reduce((a,yi,i)=>a+Math.pow(Z[i].reduce((s,v,j)=>s+w[j]*v,0)-yi,2),0)/n); 
+  $('#clockOut').textContent=`Trained OLS on ${n} samples / ${p} CpGs. RMSE≈${fmt(rmse)}`; 
+};
+
+$('#permute').onclick=()=>{ 
+  if(!MODEL.trained){ 
+    $('#clockOut').textContent='Train first.'; 
+    return; 
+  } 
+  const n=200, p=MODEL.W.length; 
+  const {X,y}=synthDNAm(n,p); 
+  const {Z}=zscore(X); 
+  const basePred=Z.map(r=>r.reduce((a,v,j)=>a+MODEL.W[j]*v,0)); 
+  const baseRMSE=Math.sqrt(basePred.reduce((s,pi,i)=>s+Math.pow(pi-y[i],2),0)/n); 
+  const deltas=[]; 
+  
+  for(let j=0;j<p;j++){ 
+    const col=Z.map(r=>r[j]).sort(()=>Math.random()-0.5); 
+    const Zp=Z.map((r,i)=>r.map((v,k)=>k===j?col[i]:v)); 
+    const pred=Zp.map(r=>r.reduce((a,v,k)=>a+MODEL.W[k]*v,0)); 
+    const rmse=Math.sqrt(pred.reduce((s,pi,i)=>s+Math.pow(pi-y[i],2),0)/n); 
+    deltas.push({j,imp:rmse-baseRMSE}); 
+  } 
+  
+  deltas.sort((a,b)=>b.imp-a.imp); 
+  $('#clockOut').innerHTML='Permutation importance (top 5):<br>'+deltas.slice(0,5).map(d=>`• ${MODEL.featNames[d.j]}: +${fmt(d.imp)} RMSE`).join('<br>'); 
+};
+
+$('#predictBtn').onclick=()=>{ 
+  if(!MODEL.trained){ 
+    $('#predOut').textContent='Train the clock first.'; 
+    return; 
+  } 
+  const age=+$('#ageIn').value; 
+  const p=MODEL.W.length; 
+  const raw=Array(p).fill(0).map((_,j)=> (Math.sin((j+1)*0.37)*0.8 + Math.cos((j+3)*0.19)*0.2)*(age/80) + (Math.random()*0.2-0.1)); 
+  const z=raw.map((v,j)=>(v-MODEL.mu[j])/(MODEL.sigma[j]||1)); 
+  const pred=z.reduce((a,v,j)=>a+(MODEL.W[j]||0)*v,0); 
+  const conf=85+Math.random()*10; 
+  $('#predOut').innerHTML=`
+    <div class="metric"><span>Chronological</span><span>${age} yrs</span></div>
+    <div class="metric"><span>Predicted biological</span><span><strong>${fmt(pred)}</strong> yrs</span></div>
+    <div class="metric"><span>Δ</span><span>${fmt(pred-age)} yrs</span></div>
+    <div class="metric"><span>Confidence</span><span>${fmt(conf)}%</span></div>`; 
+};
+
+/* ====== Cross-validation ====== */
+function kfoldCV(X,y,k,kind){
+  const n=X.length; 
+  const idx=[...Array(n).keys()];
+  for(let i=n-1;i>0;i--){ 
+    const j=Math.floor(Math.random()*(i+1)); 
+    [idx[i],idx[j]]=[idx[j],idx[i]]; 
+  }
+  const folds=[]; 
+  for(let i=0;i<k;i++) folds.push(idx.filter((_,t)=>t%k===i));
+  
+  let se=0, cnt=0;
+  for(const f of folds){
+    const test=f; 
+    const train=idx.filter(i=>!f.includes(i));
+    const Xtr=train.map(i=>X[i]), ytr=train.map(i=>y[i]);
+    const Xte=test.map(i=>X[i]), yte=test.map(i=>y[i]);
+    let w=null;
+    
+    if(kind==='ols'){ 
+      w=linfit(Xtr,ytr,0); 
+    } else if(kind==='ridge'){ 
+      w=linfit(Xtr,ytr,1.0); 
+    } else { // lasso via coordinate descent
+      const m=Xtr[0].length; 
+      w=Array(m).fill(0); 
+      const T=150, l1=0.05;
+      for(let t=0;t<T;t++){
+        for(let j=0;j<m;j++){
+          const r = Xtr.map((row,i)=> ytr[i] - row.reduce((a,v,k)=> a + (k===j?0:w[k])*v,0));
+          const rho = Xtr.reduce((a,row,i)=> a + row[j]*r[i], 0);
+          const zj = Xtr.reduce((a,row)=> a + row[j]*row[j], 0);
+          const soft = (v,th)=> (v>th?v-th: v<-th?v+th:0);
+          w[j] = soft(rho/zj, l1/zj);
+        }
+      }
+    }
+    
+    const pred = Xte.map(r=> r.reduce((a,v,j)=>a+v*(w[j]||0),0));
+    for(let i=0;i<pred.length;i++){ 
+      se += Math.pow(pred[i]-yte[i],2); 
+      cnt++; 
+    }
+  }
+  return Math.sqrt(se/cnt);
+}
+
+$('#cvBtn').onclick=()=>{
+  const k = +$('#kfold').value;
+  const n = 200, p = 50;
+  const {X,y} = synthDNAm(n,p);
+  const {Z} = zscore(X);
+  
+  const olsRMSE = kfoldCV(Z,y,k,'ols');
+  const ridgeRMSE = kfoldCV(Z,y,k,'ridge');
+  const lassoRMSE = kfoldCV(Z,y,k,'lasso');
+  
+  $('#cvOut').innerHTML = `
+    <div style="margin-top:8px">
+      <div>OLS: RMSE = ${fmt(olsRMSE)}</div>
+      <div>Ridge: RMSE = ${fmt(ridgeRMSE)}</div>
+      <div>Lasso: RMSE = ${fmt(lassoRMSE)}</div>
+      <div style="margin-top:5px" class="ok">Best: ${
+        olsRMSE <= ridgeRMSE && olsRMSE <= lassoRMSE ? 'OLS' :
+        ridgeRMSE <= lassoRMSE ? 'Ridge' : 'Lasso'
+      }</div>
+    </div>`;
+};
+
+/* ====== Methylation ====== */
+function drawMeth(){ 
+  const c=$('#methChart'), ctx=c.getContext('2d'); 
+  const W=c.clientWidth, H=300; 
+  c.width=W; c.height=H; 
+  ctx.clearRect(0,0,W,H); 
+  ctx.strokeStyle='#7b5fc4'; 
+  ctx.lineWidth=2; 
+  ctx.beginPath(); 
+  for(let x=0;x<W;x++){ 
+    const y=H/2 + Math.sin(x*0.02)*50 + (Math.random()*30-15); 
+    if(x===0) ctx.moveTo(x,y); 
+    else ctx.lineTo(x,y);
+  } 
+  ctx.stroke(); 
+}
+
+$('#runMeth').onclick=()=>{ 
+  const n=+$('#cpg').value, t=$('#tissue').value; 
+  $('#methOut').innerHTML=`
+    <div class="metric"><span>CpGs</span><span>${n}</span></div>
+    <div class="metric"><span>Tissue</span><span>${t}</span></div>
+    <div class="metric"><span>Hypermethylated</span><span>${Math.floor(n*0.30)}</span></div>
+    <div class="metric"><span>Hypomethylated</span><span>${Math.floor(n*0.20)}</span></div>
+    <div class="metric"><span>Clock accuracy</span><span>${fmt(92+Math.random()*5)}%</span></div>`; 
+  drawMeth(); 
+};
+
+/* ====== Network with Louvain phase-2 ====== */
+function regenNetwork(){
+  const canvas = $('#netCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  
+  // Clear
+  ctx.clearRect(0,0,W,H);
+  
+  // Generate nodes
+  const hubs = [
+    {name:'MMP9',type:'down'}, 
+    {name:'CD163',type:'down'}, 
+    {name:'APOB',type:'up'}, 
+    {name:'CRP',type:'up'}, 
+    {name:'SERPINE1',type:'up'}
+  ];
+  
+  const N = 18; 
+  const nodes = [], edges = [];
+  
+  for(let i=0;i<N;i++){
+    const ang = i/N * Math.PI*2; 
+    nodes.push({
+      id:i,
+      name:i<hubs.length?hubs[i].name:'P'+(i+1), 
+      type:i<hubs.length?hubs[i].type:(Math.random()>.5?'up':'down'), 
+      x:W/2+Math.cos(ang)*140, 
+      y:150+Math.sin(ang)*100
+    });
+  }
+  
+  // Generate edges
+  for(let i=0;i<N;i++) {
+    for(let j=i+1;j<N;j++){ 
+      if(Math.random()>.8 || (i<5 && j<5)) {
+        edges.push([i,j]); 
+      }
+    }
+  }
+  
+  // Store in global
+  NET = {nodes, edges, communities:null, aggregated:null};
+  
+  // Draw network
+  drawNetwork();
+  
+  // Reset UI
+  $('#QOut').textContent = 'Q = —';
+  $('#phase1Out').textContent = '—';
+  $('#phase2Out').textContent = '—';
+  $('#clusterDetails').textContent = 'Run clustering to see community details';
+}
+
+function drawNetwork(){
+  const canvas = $('#netCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  
+  ctx.clearRect(0,0,W,H);
+  
+  // Colors for communities
+  const colors = ['#4fd1c5','#f6ad55','#fc8181','#9f7aea','#63b3ed'];
+  
+  // Draw edges
+  ctx.strokeStyle = 'rgba(170,178,214,0.4)';
+  ctx.lineWidth = 1;
+  NET.edges.forEach(([i,j])=>{
+    const a = NET.nodes[i];
+    const b = NET.nodes[j];
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+  });
+  
+  // Draw nodes
+  NET.nodes.forEach((n,i)=>{
+    const cIdx = NET.communities ? NET.communities[i] : 0;
+    const color = NET.communities ? colors[cIdx % colors.length] : (n.type==='up'?'#ef5a5a':'#2fbf71');
+    
+    ctx.beginPath();
+    ctx.fillStyle = color;
+    ctx.arc(n.x, n.y, 15, 0, Math.PI*2);
+    ctx.fill();
+    
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 10px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText(n.name, n.x, n.y+4);
+  });
+  
+  // Title
+  ctx.fillStyle = '#aab2d6';
+  ctx.font = '12px system-ui';
+  ctx.fillText('Phase 1: Node-level communities', 20, 20);
+  
+  // Draw phase-2 aggregation if available
+  if(NET.aggregated) {
+    const agg = NET.aggregated;
+    const keys = Object.keys(agg);
+    const yBase = 320;
+    
+    ctx.fillStyle = '#aab2d6';
+    ctx.font = '12px system-ui';
+    ctx.fillText('Phase 2: Aggregated super-nodes', 20, yBase-20);
+    
+    keys.forEach((k,idx)=>{
+      const a = agg[k];
+      const cx = 100 + idx * ((W-200)/Math.max(1,keys.length-1));
+      const r = 20 + a.size*3;
+      const color = colors[idx % colors.length];
+      
+      ctx.beginPath();
+      ctx.fillStyle = color;
+      ctx.arc(cx, yBase, r, 0, Math.PI*2);
+      ctx.fill();
+      
+      ctx.fillStyle = '#0e0f16';
+      ctx.font = 'bold 12px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText('C'+k, cx, yBase+4);
+      
+      ctx.fillStyle = '#f4f5ff';
+      ctx.font = '9px system-ui';
+      const members = a.members.slice(0,3).join(',');
+      const suffix = a.members.length > 3 ? '...' : '';
+      ctx.fillText(members + suffix, cx, yBase + r + 15);
+    });
+  }
+}
+
+function modularity(comm, nodes, edges){
+  const n=nodes.length; 
+  const deg=Array(n).fill(0); 
+  const adj=new Set();
+  edges.forEach(([i,j])=>{ 
+    deg[i]++; 
+    deg[j]++; 
+    adj.add(i<j?`${i}-${j}`:`${j}-${i}`); 
+  });
+  
+  const m=edges.length; 
+  if(m===0) return 0; 
+  let Q=0;
+  
+  for(let i=0;i<n;i++) {
+    for(let j=0;j<n;j++) {
+      if(comm[i]===comm[j]){
+        const A = (i===j?0 : (adj.has(i<j?`${i}-${j}`:`${j}-${i}`)?1:0));
+        Q += (A - (deg[i]*deg[j])/(2*m));
+      }
+    }
+  }
+  return Q/(2*m);
+}
+
+function louvainPhase1(nodes, edges){
+  const n=nodes.length; 
+  let comm=Array(n).fill(0).map((_,i)=>i); 
+  let curQ=modularity(comm,nodes,edges); 
+  let improved=true; 
+  let it=0;
+  
+  while(improved && it<10){ 
+    improved=false; 
+    it++;
+    for(let i=0;i<n;i++){
+      const neighComms=new Set(); 
+      edges.forEach(([a,b])=>{ 
+        if(a===i) neighComms.add(comm[b]); 
+        if(b===i) neighComms.add(comm[a]); 
+      });
+      
+      let bestC=comm[i]; 
+      let bestQ=curQ;
+      const oldC=comm[i]; 
+      
+      for(const c of neighComms){ 
+        if(c===oldC) continue; 
+        comm[i]=c; 
+        const Q=modularity(comm,nodes,edges); 
+        if(Q>bestQ+1e-9){ 
+          bestQ=Q; 
+          bestC=c; 
+        } 
+      }
+      
+      comm[i]=bestC; 
+      if(bestQ>curQ+1e-9){ 
+        curQ=bestQ; 
+        improved=true; 
+      }
+    }
+  }
+  
+  return {comm, Q:curQ};
+}
+
+function louvainPhase2(comm){
+  const agg = {};
+  comm.forEach((c,i)=>{ 
+    if(!agg[c]) agg[c]={size:0, members:[]}; 
+    agg[c].size++; 
+    agg[c].members.push(NET.nodes[i].name); 
+  });
+  return agg;
+}
+
+function drawAggregatedGraph(community, nodes, edges){
+  const c = document.getElementById('aggCanvas');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+
+  const W = c.clientWidth || 420;
+  const H = 220;
+  c.width = W;
+  c.height = H;
+  ctx.clearRect(0, 0, W, H);
+
+  // Group nodes by community id
+  const groups = {};
+  community.forEach((cid, i) => {
+    if (!groups[cid]) {
+      groups[cid] = {
+        id: cid,
+        members: [],
+        hasHubDown: false,
+        hasHubUp: false
+      };
+    }
+    const n = nodes[i];
+    groups[cid].members.push(n);
+    if (n.type === 'down') groups[cid].hasHubDown = true;
+    if (n.type === 'up')   groups[cid].hasHubUp = true;
+  });
+
+  const commIds = Object.keys(groups);
+  if (commIds.length === 0) {
+    ctx.fillStyle = '#9ca3af';
+    ctx.font = '12px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText('Run clustering to see aggregated communities', W / 2, H / 2);
+    return;
+  }
+
+  // Position super-nodes in a circle
+  const cx = W / 2;
+  const cy = H / 2;
+  const R = Math.min(W, H) * 0.33;
+
+  commIds.forEach((cid, idx) => {
+    const angle = (idx / commIds.length) * Math.PI * 2 - Math.PI / 2;
+    const x = cx + R * Math.cos(angle);
+    const y = cy + R * Math.sin(angle);
+    groups[cid].x = x;
+    groups[cid].y = y;
+  });
+
+  // Build super-edges: connect communities that share at least one edge
+  const seen = new Set();
+  const superEdges = [];
+
+  edges.forEach(([i, j]) => {
+    const ci = community[i];
+    const cj = community[j];
+    if (ci === cj) return;
+    const key = ci < cj ? `${ci}-${cj}` : `${cj}-${ci}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    superEdges.push([ci, cj]);
+  });
+
+  // Draw edges between communities
+  ctx.strokeStyle = 'rgba(148,163,184,0.6)';
+  ctx.lineWidth = 1.5;
+  superEdges.forEach(([ca, cb]) => {
+    const a = groups[ca];
+    const b = groups[cb];
+    if (!a || !b) return;
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+  });
+
+  // Draw super-nodes (aggregated communities)
+  commIds.forEach(cid => {
+    const g = groups[cid];
+    const size = g.members.length;
+    // radius scales with log of community size
+    const r = 16 + 4 * Math.log2(size + 1);
+
+    // color heuristic:
+    //   - red-ish if any "down" hub in community
+    //   - green-ish if only "up"
+    //   - neutral if mixed/unknown
+    let fill = '#4b5563';
+    if (g.hasHubDown && !g.hasHubUp) fill = '#ef5a5a';
+    else if (g.hasHubUp && !g.hasHubDown) fill = '#2fbf71';
+    else if (g.hasHubDown && g.hasHubUp) fill = '#f97316';
+
+    ctx.beginPath();
+    ctx.globalAlpha = 0.9;
+    ctx.arc(g.x, g.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = fill;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Label: community id + size
+    ctx.fillStyle = '#f9fafb';
+    ctx.font = '11px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText(`C${cid} (${size})`, g.x, g.y + 4);
+  });
+}
+
+$('#clusterBtn').onclick=()=>{
+  const {comm,Q} = louvainPhase1(NET.nodes, NET.edges);
+  const agg = louvainPhase2(comm);
+  
+  NET.communities = comm;
+  NET.aggregated = agg;
+  
+  drawNetwork();
+  
+  // Display cluster groups text
+  const groupsByName = {};
+  comm.forEach((c, i) => {
+    (groupsByName[c] = groupsByName[c] || []).push(NET.nodes[i].name);
+  });
+
+  const clusterStrings = Object.values(groupsByName)
+    .map(g => `[${g.join(', ')}]`)
+    .join('  ');
+
+  $('#clusterOut').textContent = clusterStrings || '—';
+  $('#QOut').textContent = 'Q = ' + fmt(Q);
+  $('#phase1Out').textContent = [...new Set(comm)].length + ' communities';
+  $('#phase2Out').textContent = Object.keys(agg).length + ' super-nodes';
+  
+  const details = Object.keys(agg).map(k=>`C${k}: {${agg[k].members.join(', ')}}`);
+  $('#clusterDetails').innerHTML = '<strong>Communities:</strong><br>' + details.join('<br>');
+
+  // Phase-2 aggregation visual
+  drawAggregatedGraph(comm, NET.nodes, NET.edges);
+};
+
+$('#regenBtn').onclick = regenNetwork;
+
+/* ====== Data table & stats ====== */
+function renderTable(){ 
+  const tb=$('#rows'); 
+  tb.innerHTML=''; 
+  DATA.slice(-200).forEach(e=>{ 
+    const tr=el('tr'); 
+    tr.innerHTML=`
+      <td>${e.id||''}</td>
+      <td>${e.serumType||e.serum||''}</td>
+      <td>${e.bmModel||e.bm||''}</td>
+      <td>${fmt(e.ki67||e.Ki67)}%</td>
+      <td>${fmt(e.biologicalAge||e.BioAge)}</td>
+      <td>${fmt(e.procollagen||e.ProCol)}%</td>
+      <td>${e.status||'Complete'}</td>`; 
+    tb.appendChild(tr); 
+  }); 
+}
+
+function mean(a){
+  return a.reduce((s,x)=>s+x,0)/a.length
+}
+function sd(a){
+  const m=mean(a); 
+  return Math.sqrt(a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1||1))
+}
+function ttest2(a,b){ 
+  const ma=mean(a), mb=mean(b), s2a=sd(a)**2, s2b=sd(b)**2; 
+  const na=a.length, nb=b.length; 
+  const t=(ma-mb)/Math.sqrt(s2a/na + s2b/nb); 
+  return {t, df: na+nb-2}; 
+}
+
+function renderStats(){ 
+  const Y=DATA.filter(e=>(e.serumType||'').toLowerCase()==='young' && (e.bmModel||'').toLowerCase()==='yes'); 
+  const O=DATA.filter(e=>(e.serumType||'').toLowerCase()==='old' && (e.bmModel||'').toLowerCase()==='yes'); 
+  
+  if(Y.length+O.length<4){ 
+    $('#stats').textContent='Add more co-culture runs (young & old) to compute stats.'; 
+    return; 
+  } 
+  
+  const kiY=Y.map(e=>e.ki67||e.Ki67), kiO=O.map(e=>e.ki67||e.Ki67); 
+  const baY=Y.map(e=>e.biologicalAge||e.BioAge), baO=O.map(e=>e.biologicalAge||e.BioAge); 
+  const tKi=ttest2(kiY,kiO), tBa=ttest2(baY,baO); 
+  
+  $('#stats').innerHTML=`
+    <div class="metric"><span>Total experiments</span><span>${DATA.length}</span></div>
+    <div class="metric"><span>Young+BM</span><span>${Y.length}</span></div>
+    <div class="metric"><span>Old+BM</span><span>${O.length}</span></div>
+    <div class="metric"><span>Avg Ki67% (Y vs O)</span><span>${fmt(mean(kiY))} vs ${fmt(mean(kiO))} (t=${fmt(tKi.t)})</span></div>
+    <div class="metric"><span>Avg BioAge (Y vs O)</span><span>${fmt(mean(baY))} vs ${fmt(mean(baO))} (t=${fmt(tBa.t)})</span></div>
+    <div class="metric"><span>Δ Ki67 (Y−O)</span><span class="ok">+${fmt(mean(kiY)-mean(kiO))}%</span></div>
+    <div class="metric"><span>Δ BioAge (O−Y)</span><span class="ok">+${fmt(mean(baO)-mean(baY))} yrs</span></div>`; 
+}
+
+$('#genBtn').onclick=()=>{ 
+  for(let i=0;i<10;i++){ 
+    const conf={
+      serumAge:Math.random()>.5?'young':'old',
+      serumConc:10+Math.round(Math.random()*10),
+      bmModel:'yes',
+      days:21,
+      flow:500
+    }; 
+    const r=runExperimentOnce(conf); 
+    DATA.push({
+      id:r.id,
+      serumType:conf.serumAge==='young'?'Young':'Old',
+      bmModel:'Yes',
+      ki67:r.Ki67,
+      biologicalAge:r.BioAge,
+      procollagen:r.ProCol,
+      status:'Complete'
+    }); 
+  } 
+  renderTable(); 
+  renderStats(); 
+};
+
+$('#exportBtn').onclick=()=>{ 
+  const blob=new Blob([JSON.stringify(DATA,null,2)],{type:'application/json'}); 
+  const a=el('a',{href:URL.createObjectURL(blob),download:'mps_data.json'}); 
+  document.body.appendChild(a); 
+  a.click(); 
+  a.remove(); 
+};
+
+$('#importBtn').onclick=()=>$('#importFile').click();
+$('#importFile').onchange=e=>{ 
+  const f=e.target.files[0]; 
+  if(!f) return; 
+  const rd=new FileReader(); 
+  rd.onload=()=>{ 
+    try{ 
+      const arr=JSON.parse(rd.result); 
+      if(Array.isArray(arr)){ 
+        DATA=arr; 
+        renderTable(); 
+        renderStats(); 
+      } 
+    }catch(err){ 
+      alert('Invalid JSON'); 
+    } 
+  }; 
+  rd.readAsText(f); 
+};
+
+$('#csvBtn').onclick=()=>{ 
+  const header=['id','serumType','bmModel','ki67','biologicalAge','procollagen','status']; 
+  const rows=DATA.map(e=>header.map(k=>e[k]??'')); 
+  const csv=[header.join(','),...rows.map(r=>r.join(','))].join('\n'); 
+  const blob=new Blob([csv],{type:'text/csv'}); 
+  const a=el('a',{href:URL.createObjectURL(blob),download:'mps_data.csv'}); 
+  document.body.appendChild(a); 
+  a.click(); 
+  a.remove(); 
+};
+
+/* ====== Init ====== */
+renderProteinGrid();
+regenNetwork();
+drawOptTraces();
+updateOptSummary();
+
+</script>
+</body>
+</html>
